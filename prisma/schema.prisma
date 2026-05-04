@@ -1,0 +1,49 @@
+// File: prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Roles: TEACHER, PRINCIPAL, ADMIN
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         String       @default("TEACHER")
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  plans        LessonPlan[]
+}
+
+model LessonPlan {
+  id          String   @id @default(uuid())
+  title       String
+  weekOf      String   // YYYY-MM-DD
+  objective   String
+  standards   String   // Comma-separated list for aggregation
+  activities  String
+  assessment  String
+  status      String   @default("DRAFT") // DRAFT, SUBMITTED, REVIEWED
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teacherId   String
+  teacher     User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([teacherId])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
